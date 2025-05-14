@@ -1,6 +1,6 @@
 var mongoose = require("mongoose");
 
-function getProviderSchema() {
+function getUserSchema() {
     var SchemaClass = mongoose.Schema;
     var colSchema = new SchemaClass({
         email: { type: String, required: true, unique: true, index: true },
@@ -18,4 +18,4 @@ function getProviderSchema() {
     return userColRef;
 }
 
-module.exports = getProviderSchema;
+module.exports = getUserSchema;

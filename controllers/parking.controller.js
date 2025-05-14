@@ -3,7 +3,6 @@ var getParkingSlotSchema = require("../models/parkingslot.model");
 var path = require("path");
 
 var allParkingColRef = getAllParkingSchema();
-var parkingSlotColRef = getParkingSlotSchema();
 
 async function saveParkingAndCreateSlots(req, resp) {
   try {
@@ -22,6 +21,9 @@ async function saveParkingAndCreateSlots(req, resp) {
       ppicPath = req.files.ppic.name; // Save only the file name in the database
     }
 
+    // Dynamically get the model for the admin
+    const parkingSlotColRef = getParkingSlotSchema(email); // Use admin email as the admin ID
+
     // Save parking details in allparking.model.js
     var parking = new allParkingColRef({
       email,
@@ -37,18 +39,18 @@ async function saveParkingAndCreateSlots(req, resp) {
       ppic: ppicPath, // Save the parking picture path
     });
 
-    const savedParking = await parking.save();
-
-    // Create multiple slots in parkingslot.model.js
+    // Create multiple slots in the dynamically created collection
     const slots = [];
     for (let i = 1; i <= size; i++) {
       slots.push({
-        aemail: email, // Use the provider's email as the admin email
-        slotno: `Slot-${i}`,
+        email: "", // Leave empty for free slots
+        slotno: i, // Use `i` as a number for slot number
       });
     }
 
     const savedSlots = await parkingSlotColRef.insertMany(slots);
+
+    const savedParking = await parking.save();
 
     // Respond with success
     resp.status(201).send({
@@ -130,4 +132,46 @@ async function updateParkingDetails(req, resp) {
   }
 }
 
-module.exports = { saveParkingAndCreateSlots, fetchParkingDetails, updateParkingDetails };
+async function fetchAllCities(req, resp) {
+  try {
+    // Fetch all unique cities from the database
+    const cities = await allParkingColRef.distinct("city");
+
+    if (!cities || cities.length === 0) {
+      return resp.status(404).send({ status: false, message: "No cities found" });
+    }
+
+    // Respond with the list of cities
+    resp.status(200).send({ status: true, message: "Cities fetched successfully", cities });
+  } catch (err) {
+    console.error("Error fetching cities:", err);
+    resp.status(500).send({ status: false, message: "Failed to fetch cities", details: err.message });
+  }
+}
+
+async function fetchParkingFromCity(req, resp) {
+  try {
+    const { city } = req.query; // Extract city from query parameters
+
+    // Validate input
+    if (!city) {
+      return resp.status(400).send({ status: false, message: "City is required to fetch parking details" });
+    }
+
+    // Fetch parking details for the specified city
+    const parkingDetails = await allParkingColRef.find({ city });
+
+    if (!parkingDetails || parkingDetails.length === 0) {
+      return resp.status(404).send({ status: false, message: `No parking found in city: ${city}` });
+    }
+
+    // Respond with the parking details
+    resp.status(200).send({ status: true, message: "Parking details fetched successfully", parkingDetails });
+    console.log(parkingDetails);
+  } catch (err) {
+    console.error("Error fetching parking details:", err);
+    resp.status(500).send({ status: false, message: "Failed to fetch parking details", details: err.message });
+  }
+}
+
+module.exports = { saveParkingAndCreateSlots, fetchParkingDetails, updateParkingDetails, fetchAllCities, fetchParkingFromCity };

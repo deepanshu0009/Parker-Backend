@@ -1,6 +1,6 @@
 var getParkingSlotSchema = require("../models/parkingslot.model");
 
-var parkingSlotColRef = getParkingSlotSchema();
+
 
 async function fetchFreeSpace(req, resp) {
   try {
@@ -11,8 +11,10 @@ async function fetchFreeSpace(req, resp) {
       return resp.status(400).send({ status: false, message: "Parking name is required" });
     }
 
-    // Find all slots for the given parking name (document name)
-    const freeSlots = await parkingSlotColRef.find({ aemail: name, email: "" }); // Empty email indicates free slots
+    var parkingSlotColRef = getParkingSlotSchema(name);
+
+    // Find all slots where `available` is true
+    const freeSlots = await parkingSlotColRef.find({ available: true });
 
     if (freeSlots.length === 0) {
       return resp.status(404).send({ status: false, message: "No free slots available" });
@@ -35,18 +37,28 @@ async function fetchFreeSpace(req, resp) {
 
 async function bookSlot(req, resp) {
   try {
-    const { slotno, email, name, number, licenseplate, model } = req.body; // Extract details from the request body
+    const { aemail, slotno, email, name, number, licenseplate, model } = req.body; // Extract details from the request body
 
     // Validate input
-    if (!slotno || !email) {
-      return resp.status(400).send({ status: false, message: "Slot number and email are required to book a slot" });
+    if (!aemail || !slotno || !email) {
+      return resp.status(400).send({ status: false, message: "Admin email, slot number, and user email are required to book a slot" });
     }
 
-    // Find the slot by slotno and ensure it is free
-    const slot = await parkingSlotColRef.findOne({ slotno, email: "" }); // Empty email indicates the slot is free
+    // Get the parking slot collection for the admin
+    var parkingSlotColRef = getParkingSlotSchema(aemail);
+ 
+    // Ensure `slotno` is treated as a number
+    const numericSlotno = Number(slotno);
+
+    // Find the specific slot by slot number
+    const slot = await parkingSlotColRef.findOne({ slotno: numericSlotno });
 
     if (!slot) {
-      return resp.status(404).send({ status: false, message: "Slot not available or already booked" });
+      return resp.status(404).send({ status: false, message: "Slot not found" });
+    }
+
+    if (!slot.available) {
+      return resp.status(400).send({ status: false, message: "Slot is already booked" });
     }
 
     // Update the slot with booking details
@@ -55,7 +67,10 @@ async function bookSlot(req, resp) {
     slot.number = number || "";
     slot.licenseplate = licenseplate || "";
     slot.model = model || "";
+    slot.available = false;
+    slot.date = new Date();
 
+    // Save the updated slot
     const updatedSlot = await slot.save();
 
     // Respond with success

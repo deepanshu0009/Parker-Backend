@@ -6,7 +6,7 @@ function getAllParkingSchema() {
         email: { type: String, required: true, unique: true, index: true },
         name: { type: String, default: "" },
         size: { type: String, default: "" },
-        rate: { type: String, default: "" },
+        rate: { type: Number, default: "" },
         number: { type: String, default: "" },
         country: { type: String, default: "" },
         state: { type: String, default: "" },

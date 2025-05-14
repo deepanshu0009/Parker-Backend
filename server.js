@@ -2,6 +2,8 @@ var express = require("express");
 var mongoose = require("mongoose");
 var userRouter = require("./router/signup-login.router");
 var ProviderRouter = require("./router/provider.router");
+var ClientRouter = require("./router/client.router");
+var paymentRouter = require("./router/payment.router");
 var cors = require("cors");
 var bp = require("body-parser");
 var fileupload = require("express-fileupload");
@@ -27,6 +29,8 @@ app.use(cors());
 // Routes
 app.use("/user", userRouter);
 app.use("/provider", ProviderRouter);
+app.use("/client", ClientRouter);
+app.use("/payment", paymentRouter);
 
 app.listen(2002, () => {
   console.log("Server Started...");
