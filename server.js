@@ -25,6 +25,7 @@ app.use(express.json()); // To parse JSON request bodies
 app.use(bp.urlencoded({ extended: true })); // To parse URL-encoded request bodies
 app.use(fileupload());
 app.use(cors());
+app.use("/uploads", express.static("uploads"));
 
 // Routes
 app.use("/user", userRouter);

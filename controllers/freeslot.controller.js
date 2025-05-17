@@ -85,7 +85,7 @@ console.log("Time difference in hours:", timeDifferenceInhours);
     slot.available = true;
 
     // Save the updated slot
-    const updatedSlot = await slot.save();
+    const updatedSlot = await slot.save();  
 
     // Respond with success and time difference
     resp.status(200).send({
