@@ -1,7 +1,5 @@
 var getParkingSlotSchema = require("../models/parkingslot.model");
 
-
-
 async function fetchFreeSpace(req, resp) {
   try {
     const { name } = req.query; // Extract parking name from query parameters

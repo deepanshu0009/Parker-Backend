@@ -2,6 +2,7 @@ var express = require("express");
 var controller = require("../controllers/userprofile.controller");
 var parkingController = require("../controllers/parking.controller");
 var fillslotController = require("../controllers/fillslot.controller");
+var fetchslotController = require("../controllers/fetchallslots.controller");
 
 var app = express.Router();
 
@@ -21,5 +22,8 @@ app.get("/fetch-freespace-get", fillslotController.fetchFreeSpace);
 
 // Route to book a slot
 app.post("/fillslot-post", fillslotController.bookSlot);
+
+// Route to fetch all booked slots by client
+app.get("/fetch-client-booked-slots", fetchslotController.fetchAllBookedSlotsByClient);
 
 module.exports = app;
